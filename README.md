@@ -7,7 +7,8 @@ Rental is a production grade real-estate application that connects tenants and p
 ```
 
 
-                         -------- # Note:  Application is under development yet to be sent to production. --------
+                -------- # Note:  Application is under development
+                                  yet to be send to production. --------
 
 
 
