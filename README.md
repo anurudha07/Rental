@@ -1,7 +1,41 @@
+Rental
+
+---
+
+Rental is a production grade real-estate application that connects tenants and property managers seamlessly. Tenants can search for listings and submit applications, while managers can create and manage listings, review applications, handle e-sign leases, process payments, and much more.
+
 ```
-Rental :
-           Rental is production grade application for rental apartments 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`]
+
+✨ Features -----
+
+      Secure authentication via AWS Cognito
+
+      Search and authorized application flow
+
+      Create, update, and manage property listings
+
+      Map integration via Mapbox 
+
+      Real-time updates for applications and listings
+
+      Proper form validation & error handling
+
+      Protected routes for authenticated users
+
+      Responsive and minimal UI for smooth user experience
+
+
+
+🛠 ----- Tech Stack -----
+
+Frontend  -  Next.js 15 + TypeScript + Tailwind CSS  
+
+Backend   -  Node + TypeScript + Prisma + PostgreSQL
+
+Database  -  MongoDB + Mongoose
+
+Cloud  -  AWS EC2 + RDS + S3 + Amplify + AWS Cognito
+
 
 ## Getting Started
 
@@ -9,12 +43,6 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 
 Open [http://localhost:3000] with your browser to see the result.
 
