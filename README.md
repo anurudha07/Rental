@@ -1,5 +1,6 @@
 ```
-
+Rental :
+           Rental is production grade application for rental apartments 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`]
 
 ## Getting Started
