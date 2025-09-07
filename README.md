@@ -5,6 +5,7 @@ Rental
 Rental is a production grade real-estate application that connects tenants and property managers seamlessly. Tenants can search for listings and submit applications, while managers can create and manage listings, review applications, handle e-sign leases, process payments, and much more.
 
 ```
+            -------- # Note:  Application is under development yet to be sent to production. --------
 
 ✨ Features -----
 
