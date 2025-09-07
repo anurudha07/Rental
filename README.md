@@ -28,6 +28,8 @@ Rental is a production grade real-estate application that connects tenants and p
 
       Protected routes for authenticated users
 
+      Seamless managing of profile details
+
       Responsive and minimal UI for smooth user experience
 
 
