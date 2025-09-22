@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { NAVBAR_HEIGHT } from "@/lib/constants";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { useSearchParams } from "next/navigation";
@@ -8,9 +9,9 @@ import FiltersBar from "./FiltersBar";
 import FiltersFull from "./FiltersFull";
 import { cleanParams } from "@/lib/utils";
 import { setFilters } from "@/state";
-import Map from "./Map";
 import Listings from "./Listings";
 
+const Map = dynamic(() => import("./Map"), { ssr: false });
 const SearchPage = () => {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -46,7 +47,7 @@ const SearchPage = () => {
       }}
     >
       <FiltersBar />
-      <div className="flex justify-between flex-1 overflow-hidden gap-3 mb-5">
+      <div className="flex justify-between flex-1 gap-3 mb-5 min-h-[600px]">
         <div
           className={`h-full overflow-auto transition-all duration-300 ease-in-out ${
             isFiltersFullOpen
@@ -56,7 +57,10 @@ const SearchPage = () => {
         >
           <FiltersFull />
         </div>
-        <Map />
+        <div className="flex-1 min-h-[600px]">
+          <Map />
+        </div>
+
         <div className="basis-4/12 overflow-y-auto">
           <Listings />
         </div>

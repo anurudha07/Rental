@@ -8,49 +8,48 @@ import React, { useEffect, useState } from "react";
 import { useGetAuthUserQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery(undefined, {
+    // ensure query runs immediately
+    refetchOnMountOrArgChange: true,
+  });
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(true);
+  const [ready, setReady] = useState(false);
 
+  // only set ready after auth query finishes
   useEffect(() => {
-    if (authUser) {
-      const userRole = authUser.userRole?.toLowerCase();
-      if (
-        (userRole === "manager" && pathname.startsWith("/tenants")) ||
-        (userRole === "tenant" && pathname.startsWith("/managers"))
-      ) {
-        router.push(
-          userRole === "manager"
-            ? "/managers/properties"
-            : "/tenants/favorites",
-          { scroll: false }
-        );
+    if (!authLoading) {
+      if (!authUser) {
+        router.push("/signin", { scroll: false });
       } else {
-        setIsLoading(false);
+        setReady(true);
       }
     }
-  }, [authUser, router, pathname]);
+  }, [authLoading, authUser, router]);
 
-  if (authLoading || isLoading) return <>Loading...</>;
-  if (!authUser?.userRole) return null;
+  if (!ready) return <>Loading...</>;
 
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full bg-primary-100">
-        <Navbar />
-        <div style={{ marginTop: `${NAVBAR_HEIGHT}px` }}>
-          <main className="flex">
-            <Sidebar userType={authUser.userRole.toLowerCase()} />
-            <div className="flex-grow transition-all duration-300">
-              {children}
-            </div>
-          </main>
-        </div>
+return (
+  <SidebarProvider>
+    <div className="min-h-screen w-full bg-primary-100">
+      <Navbar />
+      <div style={{ marginTop: `${NAVBAR_HEIGHT}px` }}>
+        <main className="flex">
+          <Sidebar
+            userType={authUser!.userRole.toLowerCase() as "manager" | "tenant"}
+          />
+          <div className="flex-grow transition-all duration-300">{children}</div>
+        </main>
       </div>
-    </SidebarProvider>
-  );
+    </div>
+  </SidebarProvider>
+);
+
 };
 
 export default DashboardLayout;

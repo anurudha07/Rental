@@ -56,6 +56,13 @@ export const updateTenant = async (
 ): Promise<void> => {
   try {
     const { cognitoId } = req.params;
+
+    // Ensure authenticated user matches the param
+    if (req.user?.id !== cognitoId) {
+      res.status(403).json({ message: "Forbidden: cannot update other user" });
+      return;
+    }
+
     const { name, email, phoneNumber } = req.body;
 
     const updateTenant = await prisma.tenant.update({
@@ -81,6 +88,13 @@ export const getCurrentResidences = async (
 ): Promise<void> => {
   try {
     const { cognitoId } = req.params;
+
+    // Ensure authenticated user matches the requested cognitoId or is manager
+    if (req.user?.id !== cognitoId && req.user?.role !== "manager") {
+      res.status(403).json({ message: "Forbidden: cannot fetch other user's residences" });
+      return;
+    }
+
     const properties = await prisma.property.findMany({
       where: { tenants: { some: { cognitoId } } },
       include: {
@@ -114,7 +128,7 @@ export const getCurrentResidences = async (
   } catch (err: any) {
     res
       .status(500)
-      .json({ message: `Error retrieving manager properties: ${err.message}` });
+      .json({ message: `Error retrieving residences: ${err.message}` });
   }
 };
 
@@ -124,6 +138,13 @@ export const addFavoriteProperty = async (
 ): Promise<void> => {
   try {
     const { cognitoId, propertyId } = req.params;
+
+    // Ensure authenticated user matches the param
+    if (req.user?.id !== cognitoId) {
+      res.status(403).json({ message: "Forbidden: cannot modify another user's favorites" });
+      return;
+    }
+
     const tenant = await prisma.tenant.findUnique({
       where: { cognitoId },
       include: { favorites: true },
@@ -164,6 +185,12 @@ export const removeFavoriteProperty = async (
 ): Promise<void> => {
   try {
     const { cognitoId, propertyId } = req.params;
+
+    if (req.user?.id !== cognitoId) {
+      res.status(403).json({ message: "Forbidden: cannot modify another user's favorites" });
+      return;
+    }
+
     const propertyIdNumber = Number(propertyId);
 
     const updatedTenant = await prisma.tenant.update({

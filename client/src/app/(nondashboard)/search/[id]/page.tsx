@@ -12,9 +12,18 @@ import ApplicationModal from "./ApplicationModal";
 
 const SingleListing = () => {
   const { id } = useParams();
-  const propertyId = Number(id);
+
+  // Convert string | string[] | undefined to number safely
+  const propertyId =
+    typeof id === "string" ? Number(id) : Array.isArray(id) ? Number(id[0]) : NaN;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: authUser } = useGetAuthUserQuery();
+
+  // Handle invalid ID
+  if (isNaN(propertyId)) {
+    return <div>Invalid property ID</div>;
+  }
 
   return (
     <div>

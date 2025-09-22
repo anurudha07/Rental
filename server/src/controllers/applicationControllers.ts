@@ -10,7 +10,7 @@ export const listApplications = async (
   try {
     const { userId, userType } = req.query;
 
-    let whereClause = {};
+    let whereClause: any = {};
 
     if (userId && userType) {
       if (userType === "tenant") {
@@ -88,11 +88,16 @@ export const createApplication = async (
   res: Response
 ): Promise<void> => {
   try {
+    const tenantAuthId = req.user?.id;
+    if (!tenantAuthId) {
+      res.status(401).json({ message: "Unauthorized: missing tenant identity" });
+      return;
+    }
+
     const {
       applicationDate,
       status,
       propertyId,
-      tenantCognitoId,
       name,
       email,
       phoneNumber,
@@ -110,25 +115,21 @@ export const createApplication = async (
     }
 
     const newApplication = await prisma.$transaction(async (prisma) => {
-      // Create lease first
       const lease = await prisma.lease.create({
         data: {
-          startDate: new Date(), // Today
-          endDate: new Date(
-            new Date().setFullYear(new Date().getFullYear() + 1)
-          ), // 1 year from today
+          startDate: new Date(),
+          endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
           rent: property.pricePerMonth,
           deposit: property.securityDeposit,
           property: {
             connect: { id: propertyId },
           },
           tenant: {
-            connect: { cognitoId: tenantCognitoId },
+            connect: { cognitoId: tenantAuthId },
           },
         },
       });
 
-      // Then create application with lease connection
       const application = await prisma.application.create({
         data: {
           applicationDate: new Date(applicationDate),
@@ -141,7 +142,7 @@ export const createApplication = async (
             connect: { id: propertyId },
           },
           tenant: {
-            connect: { cognitoId: tenantCognitoId },
+            connect: { cognitoId: tenantAuthId },
           },
           lease: {
             connect: { id: lease.id },
@@ -159,6 +160,7 @@ export const createApplication = async (
 
     res.status(201).json(newApplication);
   } catch (error: any) {
+    console.error("createApplication error:", error);
     res
       .status(500)
       .json({ message: `Error creating application: ${error.message}` });
@@ -172,7 +174,6 @@ export const updateApplicationStatus = async (
   try {
     const { id } = req.params;
     const { status } = req.body;
-    console.log("status:", status);
 
     const application = await prisma.application.findUnique({
       where: { id: Number(id) },
@@ -191,9 +192,7 @@ export const updateApplicationStatus = async (
       const newLease = await prisma.lease.create({
         data: {
           startDate: new Date(),
-          endDate: new Date(
-            new Date().setFullYear(new Date().getFullYear() + 1)
-          ),
+          endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
           rent: application.property.pricePerMonth,
           deposit: application.property.securityDeposit,
           propertyId: application.propertyId,
@@ -201,7 +200,6 @@ export const updateApplicationStatus = async (
         },
       });
 
-      // Update the property to connect the tenant
       await prisma.property.update({
         where: { id: application.propertyId },
         data: {
@@ -211,32 +209,20 @@ export const updateApplicationStatus = async (
         },
       });
 
-      // Update the application with the new lease ID
       await prisma.application.update({
         where: { id: Number(id) },
         data: { status, leaseId: newLease.id },
-        include: {
-          property: true,
-          tenant: true,
-          lease: true,
-        },
       });
     } else {
-      // Update the application status (for both "Denied" and other statuses)
       await prisma.application.update({
         where: { id: Number(id) },
         data: { status },
       });
     }
 
-    // Respond with the updated application details
     const updatedApplication = await prisma.application.findUnique({
       where: { id: Number(id) },
-      include: {
-        property: true,
-        tenant: true,
-        lease: true,
-      },
+      include: { property: true, tenant: true, lease: true },
     });
 
     res.json(updatedApplication);

@@ -1,50 +1,60 @@
+"use client";
+
 import { useGetPropertyQuery } from "@/state/api";
 import { Compass, MapPin } from "lucide-react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useEffect, useRef } from "react";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
+interface PropertyLocationProps {
+  propertyId: number; // <-- change to number
+}
 
-const PropertyLocation = ({ propertyId }: PropertyDetailsProps) => {
-  const {
-    data: property,
-    isError,
-    isLoading,
-  } = useGetPropertyQuery(propertyId);
-  const mapContainerRef = useRef(null);
+const PropertyLocation = ({ propertyId }: PropertyLocationProps) => {
+  const { data: property, isError, isLoading } = useGetPropertyQuery(propertyId);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (isLoading || isError || !property) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current!,
-      style: "mapbox://styles/majesticglue/cm6u301pq008b01sl7yk1cnvb",
-      center: [
-        property.location.coordinates.longitude,
-        property.location.coordinates.latitude,
-      ],
-      zoom: 14,
-    });
+    let map: any = null;
+    let marker: any = null;
 
-    const marker = new mapboxgl.Marker()
-      .setLngLat([
-        property.location.coordinates.longitude,
-        property.location.coordinates.latitude,
-      ])
-      .addTo(map);
+    (async () => {
+      const mapboxglModule = await import("mapbox-gl");
+      const mapboxgl = (mapboxglModule as any).default ?? mapboxglModule;
 
-    const markerElement = marker.getElement();
-    const path = markerElement.querySelector("path[fill='#3FB1CE']");
-    if (path) path.setAttribute("fill", "#000000");
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
-    return () => map.remove();
+      if (!mapContainerRef.current) return;
+
+      map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: "mapbox://styles/majesticglue/cm6u301pq008b01sl7yk1cnvb",
+        center: [
+          property.location.coordinates.longitude,
+          property.location.coordinates.latitude,
+        ],
+        zoom: 14,
+      });
+
+      marker = new mapboxgl.Marker()
+        .setLngLat([
+          property.location.coordinates.longitude,
+          property.location.coordinates.latitude,
+        ])
+        .addTo(map);
+
+      try {
+        const markerEl = marker.getElement();
+        const path = markerEl.querySelector("path[fill='#3FB1CE']");
+        if (path) (path as SVGPathElement).setAttribute("fill", "#000000");
+      } catch {}
+    })();
+
+    return () => map?.remove();
   }, [property, isError, isLoading]);
 
-  if (isLoading) return <>Loading...</>;
-  if (isError || !property) {
-    return <>Property not Found</>;
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (isError || !property) return <div>Property not Found</div>;
 
   return (
     <div className="py-16">

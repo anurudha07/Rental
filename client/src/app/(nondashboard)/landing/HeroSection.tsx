@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -32,7 +31,7 @@ const HeroSection = () => {
         dispatch(
           setFilters({
             location: trimmedQuery,
-            coordinates: [lat, lng],
+            coordinates: [lng, lat],
           })
         );
         const params = new URLSearchParams({
@@ -48,45 +47,51 @@ const HeroSection = () => {
   };
 
   return (
-    <div className="relative h-screen">
-      <Image
-        src="/landing-splash.jpg"
-        alt="Rental Renting Platform Hero Section"
-        fill
-        className="object-cover object-center"
-        priority
-      />
-      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+    <div className="relative min-h-screen bg-gradient-to-r from-gray-50 via-gray-100 to-gray-600 flex items-center justify-center font-sans py-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="absolute top-1/3 transform -translate-x-1/2 -translate-y-1/2 text-center w-full"
+        className="relative z-10 text-center w-full px-4"
       >
-        <div className="max-w-4xl mx-auto px-16 sm:px-12">
-          <h1 className="text-5xl font-bold text-white mb-4">
-            Start your journey to finding the perfect place to call home
+        <div className="max-w-3xl mx-auto space-y-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl text-gray-900 font-normal">
+            Rental 
           </h1>
-          <p className="text-xl text-white mb-8">
-            Explore our wide range of rental properties tailored to fit your
-            lifestyle and needs!
+
+          <p className="text-[11px] sm:text-xs md:text-sm text-gray-700">
+            Explore our wide range of rental properties tailored to fit your lifestyle and needs!
           </p>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-0 mt-3">
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by city, neighborhood or address"
-              className="w-full max-w-lg rounded-none rounded-l-xl border-none bg-white h-12"
+              className="w-full sm:max-w-lg rounded-none rounded-l-xl border-none bg-white h-9 sm:h-10 text-xs placeholder-gray-500 focus:bg-gray-200 transition-colors"
             />
             <Button
               onClick={handleLocationSearch}
-              className="bg-secondary-500 text-white rounded-none rounded-r-xl border-none hover:bg-secondary-600 h-12"
+              className="bg-black text-white rounded-none rounded-r-xl border-none h-9 sm:h-10 text-xs hover:bg-gray-800 transition-colors"
             >
               Search
             </Button>
           </div>
+
+          <p className="text-[10px] sm:text-xs md:text-xs text-gray-600 mt-1">
+            Use our filters to quickly narrow down the homes that fit your needs.
+          </p>
+
+          {/* Beautiful Paragraph */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className="bg- p-4 sm:p-6 mt-4 text-gray-800 text-[10px] sm:text-xs md:text-sm shadow-md border border-gray-200"
+          >
+            🏡 <strong>Why choose us?</strong> We provide a seamless rental experience with advanced search filters, verified listings, and personalized recommendations to help you find the perfect home quickly and confidently.
+          </motion.div>
         </div>
       </motion.div>
     </div>

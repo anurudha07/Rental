@@ -1,3 +1,4 @@
+"use client"
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
 import {
   Application,
@@ -8,17 +9,57 @@ import {
   Tenant,
 } from "@/types/prismaTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
+
+type AuthUser = {
+  cognitoInfo: { userId: string };
+  userInfo: Tenant | Manager | { name?: string; email?: string; phoneNumber?: string };
+  userRole: string; // "tenant" | "manager" | etc.
+};
+const TOKEN_STORAGE_KEY = "token";
+
+/** Parse JWT payload without external dep (returns payload object or null) */
+function parseJwtPayload(token?: string) {
+  if (!token) return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = parts[1];
+    const decoded = JSON.parse(
+      decodeURIComponent(
+        atob(payload)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      )
+    );
+    return decoded;
+  } catch (err) {
+    console.warn("Failed to parse JWT payload", err);
+    return null;
+  }
+}
+
+/**
+ * NOTE: prefer NEXT_PUBLIC_API_URL in .env (you already have NEXT_PUBLIC_API_URL)
+ * The API base becomes <PUBLIC_BASE>/api so endpoint strings like "properties" map to /api/properties
+ */
+const PUBLIC_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_PREFIXED_BASE = `${PUBLIC_BASE.replace(/\/$/, "")}/api`;
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseUrl: API_PREFIXED_BASE,
     prepareHeaders: async (headers) => {
-      const session = await fetchAuthSession();
-      const { idToken } = session.tokens ?? {};
-      if (idToken) {
-        headers.set("Authorization", `Bearer ${idToken}`);
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
+        if (token) {
+          headers.set("Authorization", `Bearer ${token}`);
+        }
+      } catch (err) {
+        console.warn("prepareHeaders: localStorage unavailable", err);
       }
       return headers;
     },
@@ -34,84 +75,114 @@ export const api = createApi({
     "Applications",
   ],
   endpoints: (build) => ({
-    getAuthUser: build.query<User, void>({
-      queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
+    /**
+     * getAuthUser
+     * This calls the backend protected /api/auth/me endpoint when a token is present.
+     * Returns the same AuthUser shape used across the app.
+     */
+    getAuthUser: build.query<AuthUser, void>({
+      // custom queryFn because we first need to check for token presence
+      async queryFn(_, _queryApi, _extraOptions, fetchWithBQ) {
         try {
-          const session = await fetchAuthSession();
-          const { idToken } = session.tokens ?? {};
-          const user = await getCurrentUser();
-          const userRole = idToken?.payload["custom:role"] as string;
-
-          const endpoint =
-            userRole === "manager"
-              ? `/managers/${user.userId}`
-              : `/tenants/${user.userId}`;
-
-          let userDetailsResponse = await fetchWithBQ(endpoint);
-
-          // if user doesn't exist, create new user
-          if (
-            userDetailsResponse.error &&
-            userDetailsResponse.error.status === 404
-          ) {
-            userDetailsResponse = await createNewUserInDatabase(
-              user,
-              idToken,
-              userRole,
-              fetchWithBQ
-            );
+          const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
+          if (!token) {
+            return { error: { status: 401, data: "No auth token" } as any };
           }
 
-          return {
-            data: {
-              cognitoInfo: { ...user },
-              userInfo: userDetailsResponse.data as Tenant | Manager,
-              userRole,
-            },
-          };
+          // baseUrl already contains /api, so call "auth/me"
+          const result = await fetchWithBQ("auth/me");
+
+          // fetchWithBQ returns { data } or { error }
+          if ((result as any).error) {
+            // If backend returns 404 or 401, try to parse token and fallback to minimal data
+            const err = (result as any).error;
+            // 401 -> token invalid or expired
+            if (err.status === 401) {
+              return { error: err } as any;
+            }
+
+            // 404 or other -> try to decode token and return a minimal auth object
+            const payload = parseJwtPayload(token);
+            if (!payload) {
+              return { error: { status: 401, data: "Invalid token" } as any };
+            }
+            const userId = payload.sub as string;
+            const userRole = (payload.role as string) || (payload["custom:role"] as string) || "";
+
+            // attempt to fetch tenant/manager record directly if possible
+            const endpoint = userRole === "manager" ? `managers/${userId}` : `tenants/${userId}`;
+            const direct = await fetchWithBQ(endpoint);
+
+            if ((direct as any).data) {
+              return {
+                data: {
+                  cognitoInfo: { userId },
+                  userInfo: (direct as any).data,
+                  userRole,
+                },
+              } as { data: AuthUser };
+            }
+
+            // fallback to minimal
+            return {
+              data: {
+                cognitoInfo: { userId },
+                userInfo: { name: payload.name ?? "", email: payload.email ?? "" },
+                userRole,
+              },
+            } as { data: AuthUser };
+          }
+
+          // success: backend returned { authUser }
+          const responseData = (result as any).data;
+          // Accept either { authUser } or direct authUser in body
+          const authUser = responseData?.authUser ?? responseData;
+
+          return { data: authUser } as { data: AuthUser };
         } catch (error: any) {
-          return { error: error.message || "Could not fetch user data" };
+          return { error: { status: "CUSTOM_ERROR", data: error.message || "Could not fetch user data" } } as any;
         }
       },
+      // don't cache too long; auth state updates should revalidate
+      // (you can configure extra options at call sites)
     }),
 
-    // property related endpoints
-    getProperties: build.query<
-      Property[],
-      Partial<FiltersState> & { favoriteIds?: number[] }
-    >({
-      query: (filters) => {
-        const params = cleanParams({
-          location: filters.location,
-          priceMin: filters.priceRange?.[0],
-          priceMax: filters.priceRange?.[1],
-          beds: filters.beds,
-          baths: filters.baths,
-          propertyType: filters.propertyType,
-          squareFeetMin: filters.squareFeet?.[0],
-          squareFeetMax: filters.squareFeet?.[1],
-          amenities: filters.amenities?.join(","),
-          availableFrom: filters.availableFrom,
-          favoriteIds: filters.favoriteIds?.join(","),
-          latitude: filters.coordinates?.[1],
-          longitude: filters.coordinates?.[0],
-        });
+    // ------ properties endpoints (no changes to queries) ------
+    getProperties: build.query<Property[], Partial<FiltersState> & { favoriteIds?: number[] }>(
+      {
+        query: (filters) => {
+          const params = cleanParams({
+            location: filters.location,
+            priceMin: filters.priceRange?.[0],
+            priceMax: filters.priceRange?.[1],
+            beds: filters.beds,
+            baths: filters.baths,
+            propertyType: filters.propertyType,
+            squareFeetMin: filters.squareFeet?.[0],
+            squareFeetMax: filters.squareFeet?.[1],
+            amenities: filters.amenities?.join(","),
+            availableFrom: filters.availableFrom,
+            favoriteIds: filters.favoriteIds?.join(","),
+            latitude: filters.coordinates?.[1],
+            longitude: filters.coordinates?.[0],
+          });
 
-        return { url: "properties", params };
-      },
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
-              { type: "Properties", id: "LIST" },
-            ]
-          : [{ type: "Properties", id: "LIST" }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch properties.",
-        });
-      },
-    }),
+          return { url: "properties", params };
+        },
+        providesTags: (result) =>
+          result
+            ? [
+                ...result.map(({ id }) => ({ type: "Properties" as const, id })),
+                { type: "Properties", id: "LIST" },
+              ]
+            : [{ type: "Properties", id: "LIST" }],
+        async onQueryStarted(_, { queryFulfilled }) {
+          await withToast(queryFulfilled, {
+            error: "Failed to fetch properties.",
+          });
+        },
+      }
+    ),
 
     getProperty: build.query<Property, number>({
       query: (id) => `properties/${id}`,
@@ -123,7 +194,7 @@ export const api = createApi({
       },
     }),
 
-    // tenant related endpoints
+    // tenant endpoints...
     getTenant: build.query<Tenant, string>({
       query: (cognitoId) => `tenants/${cognitoId}`,
       providesTags: (result) => [{ type: "Tenants", id: result?.id }],
@@ -150,10 +221,7 @@ export const api = createApi({
       },
     }),
 
-    updateTenantSettings: build.mutation<
-      Tenant,
-      { cognitoId: string } & Partial<Tenant>
-    >({
+    updateTenantSettings: build.mutation<Tenant, { cognitoId: string } & Partial<Tenant>>({
       query: ({ cognitoId, ...updatedTenant }) => ({
         url: `tenants/${cognitoId}`,
         method: "PUT",
@@ -168,10 +236,7 @@ export const api = createApi({
       },
     }),
 
-    addFavoriteProperty: build.mutation<
-      Tenant,
-      { cognitoId: string; propertyId: number }
-    >({
+    addFavoriteProperty: build.mutation<Tenant, { cognitoId: string; propertyId: number }>({
       query: ({ cognitoId, propertyId }) => ({
         url: `tenants/${cognitoId}/favorites/${propertyId}`,
         method: "POST",
@@ -188,10 +253,7 @@ export const api = createApi({
       },
     }),
 
-    removeFavoriteProperty: build.mutation<
-      Tenant,
-      { cognitoId: string; propertyId: number }
-    >({
+    removeFavoriteProperty: build.mutation<Tenant, { cognitoId: string; propertyId: number }>({
       query: ({ cognitoId, propertyId }) => ({
         url: `tenants/${cognitoId}/favorites/${propertyId}`,
         method: "DELETE",
@@ -208,7 +270,7 @@ export const api = createApi({
       },
     }),
 
-    // manager related endpoints
+    // manager endpoints...
     getManagerProperties: build.query<Property[], string>({
       query: (cognitoId) => `managers/${cognitoId}/properties`,
       providesTags: (result) =>
@@ -225,10 +287,7 @@ export const api = createApi({
       },
     }),
 
-    updateManagerSettings: build.mutation<
-      Manager,
-      { cognitoId: string } & Partial<Manager>
-    >({
+    updateManagerSettings: build.mutation<Manager, { cognitoId: string } & Partial<Manager>>({
       query: ({ cognitoId, ...updatedManager }) => ({
         url: `managers/${cognitoId}`,
         method: "PUT",
@@ -261,7 +320,7 @@ export const api = createApi({
       },
     }),
 
-    // lease related enpoints
+    // leases, payments, applications ...
     getLeases: build.query<Lease[], number>({
       query: () => "leases",
       providesTags: ["Leases"],
@@ -292,11 +351,7 @@ export const api = createApi({
       },
     }),
 
-    // application related endpoints
-    getApplications: build.query<
-      Application[],
-      { userId?: string; userType?: string }
-    >({
+    getApplications: build.query<Application[], { userId?: string; userType?: string }>({
       query: (params) => {
         const queryParams = new URLSearchParams();
         if (params.userId) {
@@ -316,10 +371,7 @@ export const api = createApi({
       },
     }),
 
-    updateApplicationStatus: build.mutation<
-      Application & { lease?: Lease },
-      { id: number; status: string }
-    >({
+    updateApplicationStatus: build.mutation<Application & { lease?: Lease }, { id: number; status: string }>({
       query: ({ id, status }) => ({
         url: `applications/${id}/status`,
         method: "PUT",

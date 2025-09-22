@@ -1,3 +1,4 @@
+"use client" 
 import { useGetPropertyQuery } from "@/state/api";
 import { MapPin, Star } from "lucide-react";
 import React from "react";
