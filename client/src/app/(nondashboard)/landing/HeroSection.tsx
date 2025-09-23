@@ -7,14 +7,23 @@ import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { setFilters } from "@/state";
+import { useGetAuthUserQuery } from "@/state/api"; 
 
 const HeroSection = () => {
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
+  const { data: authUser, isLoading } = useGetAuthUserQuery();
+
   const handleLocationSearch = async () => {
     try {
+      //  if not logged in, redirect to signin
+      if (!authUser && !isLoading) {
+        router.push("/signin");
+        return;
+      }
+
       const trimmedQuery = searchQuery.trim();
       if (!trimmedQuery) return;
 
@@ -25,20 +34,24 @@ const HeroSection = () => {
           process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
         }&fuzzyMatch=true`
       );
+
       const data = await response.json();
       if (data.features && data.features.length > 0) {
         const [lng, lat] = data.features[0].center;
+
         dispatch(
           setFilters({
             location: trimmedQuery,
             coordinates: [lng, lat],
           })
         );
+
         const params = new URLSearchParams({
           location: trimmedQuery,
           lat: lat.toString(),
-          lng: lng,
+          lng: lng.toString(),
         });
+
         router.push(`/search?${params.toString()}`);
       }
     } catch (error) {
@@ -56,7 +69,7 @@ const HeroSection = () => {
       >
         <div className="max-w-3xl mx-auto space-y-4">
           <h1 className="text-xl sm:text-2xl md:text-3xl text-gray-900 font-normal">
-            Rental 
+            Rental
           </h1>
 
           <p className="text-[11px] sm:text-xs md:text-sm text-gray-700">
@@ -83,12 +96,12 @@ const HeroSection = () => {
             Use our filters to quickly narrow down the homes that fit your needs.
           </p>
 
-          {/* Beautiful Paragraph */}
+          {/*Paragraph */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="bg- p-4 sm:p-6 mt-4 text-gray-800 text-[10px] sm:text-xs md:text-sm shadow-md border border-gray-200"
+            className="p-4 sm:p-6 mt-4 text-gray-800 text-[10px] sm:text-xs md:text-sm shadow-md border border-gray-200"
           >
             🏡 <strong>Why choose us?</strong> We provide a seamless rental experience with advanced search filters, verified listings, and personalized recommendations to help you find the perfect home quickly and confidently.
           </motion.div>

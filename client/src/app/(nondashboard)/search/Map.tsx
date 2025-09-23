@@ -20,9 +20,8 @@ export default function MapComponent() {
   const filters = useAppSelector((s) => s.global.filters);
   const { data: properties, isLoading, isError } = useGetPropertiesQuery(filters);
 
- const USER_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || FALLBACK_STYLE;
- const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
-
+  const USER_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || FALLBACK_STYLE;
+  const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
   /** Initialize Map */
   useEffect(() => {
@@ -143,8 +142,7 @@ export default function MapComponent() {
       {/* Map container must remain empty */}
       <div
         ref={containerRef}
-        className="w-full h-full rounded-xl"
-        style={{ minHeight: "600px" }}
+        className="w-full h-full rounded-xl min-h-[60vh] lg:min-h-[600px]"
         role="region"
         aria-label="Properties map"
       />

@@ -1,5 +1,5 @@
 "use client"
-import { FiltersState, initialState, setFilters } from "@/state";
+import { FiltersState, initialState, setFilters, toggleFiltersFullOpen } from "@/state";
 import { useAppSelector } from "@/state/redux";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -47,6 +47,14 @@ const FiltersFull = () => {
   const handleSubmit = () => {
     dispatch(setFilters(localFilters));
     updateURL(localFilters);
+
+    // Close on mobile only
+    if (typeof window !== "undefined") {
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      if (isMobile) {
+        dispatch(toggleFiltersFullOpen());
+      }
+    }
   };
 
   const handleReset = () => {
@@ -97,7 +105,7 @@ const FiltersFull = () => {
           <div className="flex items-center">
             <Input
               placeholder="Enter location"
-              value={filters.location}
+              value={localFilters.location}
               onChange={(e) =>
                 setLocalFilters((prev) => ({
                   ...prev,

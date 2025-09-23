@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   FiltersState,
   setFilters,
@@ -99,14 +99,15 @@ const FiltersBar = () => {
 
   return (
     <div className="flex justify-between items-center w-full py-5">
-      {/* Filters */}
-      <div className="flex justify-between items-center gap-4 p-2">
+      {/* Filters - horizontally scrollable on small screens */}
+      <div className="flex items-center gap-4 p-2 overflow-x-auto whitespace-nowrap flex-nowrap scrollbar-hide">
         {/* All Filters */}
         <Button
           variant="outline"
           className={cn(
             "gap-2 rounded-xl border-primary-400 hover:bg-primary-500 hover:text-primary-100",
-            isFiltersFullOpen && "bg-primary-700 text-primary-100"
+            isFiltersFullOpen && "bg-primary-700 text-primary-100",
+            "flex-shrink-0"
           )}
           onClick={() => dispatch(toggleFiltersFullOpen())}
         >
@@ -114,25 +115,25 @@ const FiltersBar = () => {
           <span>All Filters</span>
         </Button>
 
-        {/* Search Location */}
-        <div className="flex items-center">
+        {/* Search Location - make input flexible on small screens */}
+        <div className="flex items-center min-w-0 flex-shrink-0 min-w-[180px]">
           <Input
             placeholder="Search location"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-40 rounded-l-xl rounded-r-none border-primary-400 border-r-0"
+            className="flex-1 min-w-0 rounded-l-xl rounded-r-none border-primary-400 border-r-0"
           />
           <Button
             onClick={handleLocationSearch}
             className={`rounded-r-xl rounded-l-none border-l-none border-primary-400 shadow-none 
-              border hover:bg-primary-700 hover:text-primary-50`}
+              border hover:bg-primary-700 hover:text-primary-50 flex-shrink-0`}
           >
             <Search className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Price Range */}
-        <div className="flex gap-1">
+        {/* Price Range - stays inline and scrollable */}
+        <div className="flex gap-1 whitespace-nowrap flex-shrink-0">
           {/* Minimum Price Selector */}
           <Select
             value={filters.priceRange[0]?.toString() || "any"}
@@ -140,7 +141,7 @@ const FiltersBar = () => {
               handleFilterChange("priceRange", value, true)
             }
           >
-            <SelectTrigger className="w-22 rounded-xl border-primary-400">
+            <SelectTrigger className="w-22 rounded-xl border-primary-400 flex-shrink-0">
               <SelectValue>
                 {formatPriceValue(filters.priceRange[0], true)}
               </SelectValue>
@@ -162,7 +163,7 @@ const FiltersBar = () => {
               handleFilterChange("priceRange", value, false)
             }
           >
-            <SelectTrigger className="w-22 rounded-xl border-primary-400">
+            <SelectTrigger className="w-22 rounded-xl border-primary-400 flex-shrink-0">
               <SelectValue>
                 {formatPriceValue(filters.priceRange[1], false)}
               </SelectValue>
@@ -179,13 +180,13 @@ const FiltersBar = () => {
         </div>
 
         {/* Beds and Baths */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 whitespace-nowrap flex-shrink-0">
           {/* Beds */}
           <Select
             value={filters.beds}
             onValueChange={(value) => handleFilterChange("beds", value, null)}
           >
-            <SelectTrigger className="w-26 rounded-xl border-primary-400">
+            <SelectTrigger className="w-26 rounded-xl border-primary-400 flex-shrink-0">
               <SelectValue placeholder="Beds" />
             </SelectTrigger>
             <SelectContent className="bg-white">
@@ -202,7 +203,7 @@ const FiltersBar = () => {
             value={filters.baths}
             onValueChange={(value) => handleFilterChange("baths", value, null)}
           >
-            <SelectTrigger className="w-26 rounded-xl border-primary-400">
+            <SelectTrigger className="w-26 rounded-xl border-primary-400 flex-shrink-0">
               <SelectValue placeholder="Baths" />
             </SelectTrigger>
             <SelectContent className="bg-white">
@@ -221,7 +222,7 @@ const FiltersBar = () => {
             handleFilterChange("propertyType", value, null)
           }
         >
-          <SelectTrigger className="w-32 rounded-xl border-primary-400">
+          <SelectTrigger className="w-32 rounded-xl border-primary-400 flex-shrink-0">
             <SelectValue placeholder="Home Type" />
           </SelectTrigger>
           <SelectContent className="bg-white">

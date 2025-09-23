@@ -3,7 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useGetAuthUserQuery } from "@/state/api";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -23,6 +24,9 @@ const itemVariants = {
 };
 
 const FeaturesSection = () => {
+  const router = useRouter();
+  const { data: authUser, isLoading } = useGetAuthUserQuery();
+
   const features = [
     {
       imageSrc: "/landing-search3.png",
@@ -45,6 +49,15 @@ const FeaturesSection = () => {
         "Find trustworthy and verified rental listings to ensure a hassle-free experience.",
     },
   ];
+
+  const handleCTA = (href?: string) => {
+    // If auth state still loading, do nothing (or you could show a spinner)
+    if (!authUser && !isLoading) {
+      router.push("/signin");
+      return;
+    }
+    router.push(href ?? "/search");
+  };
 
   return (
     <motion.div
@@ -76,20 +89,24 @@ const FeaturesSection = () => {
         >
           {features.map((feature, index) => (
             <motion.div key={index} variants={itemVariants}>
-              <FeatureCard {...feature} showButton={index === 1} />
+              <FeatureCard
+                {...feature}
+                showButton={index === 1}
+                onCTAClick={() => handleCTA(feature.linkHref)}
+              />
             </motion.div>
           ))}
         </motion.div>
 
         {/* Mobile button at the end */}
         <div className="mt-6 md:hidden text-center">
-          <Link
-            href="/search"
+          <button
+            onClick={() => handleCTA("/search")}
             className="inline-block border border-gray-300 rounded px-6 py-3 text-base font-medium hover:bg-gray-100 transition-colors"
-            scroll={false}
+            type="button"
           >
             {"Let's Go"}
-          </Link>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -103,6 +120,7 @@ const FeatureCard = ({
   linkText,
   linkHref,
   showButton,
+  onCTAClick,
 }: {
   imageSrc: string;
   title: string;
@@ -110,6 +128,7 @@ const FeatureCard = ({
   linkText?: string;
   linkHref?: string;
   showButton?: boolean;
+  onCTAClick?: () => void;
 }) => (
   <div className="text-center">
     <div className="p-4 rounded-lg mb-4 flex items-center justify-center h-48">
@@ -127,13 +146,13 @@ const FeatureCard = ({
     {/* Desktop button */}
     {showButton && linkHref && linkText && (
       <div className="hidden md:block">
-        <Link
-          href={linkHref}
+        <button
+          onClick={onCTAClick}
           className="inline-block border border-gray-300 rounded px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors mt-4"
-          scroll={false}
+          type="button"
         >
           {linkText}
-        </Link>
+        </button>
       </div>
     )}
   </div>
