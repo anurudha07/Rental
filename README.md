@@ -19,8 +19,8 @@ Rental
                                   to load initially due to server cold start. --------
 
 
-## Live Demo
-**[🔴 Live Demo — Try Rental now](https://your-live-demo.com)**
+**Live Demo:** [Try Rental (live)](https://rental-3psq.onrender.com/)
+
 
 
 
