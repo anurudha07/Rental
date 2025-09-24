@@ -8,7 +8,6 @@ Rental
 
 
    A production grade real estate rental apartment marketplace.
-   Lets make Rental an another community.
    Rental beta version is published.
 
    <p><small><a href="https://rental-3psq.onrender.com/" target="_blank" rel="noopener noreferrer">View demo</a></small></p>
