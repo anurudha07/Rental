@@ -6,13 +6,11 @@ Rental
 
 ---
 
+
    A production grade real estate rental apartment marketplace.
    Lets make Rental an another community.
    Rental beta version is published.
 
-   [View Demo](https://rental-3psq.onrender.com/)
-
-   
 
 ```
 
@@ -22,6 +20,8 @@ Rental
                                   to load initially due to server cold start. --------
 
 
+ [View Demo](https://rental-3psq.onrender.com/)
+ 
 
 ✨ Features -----
 
