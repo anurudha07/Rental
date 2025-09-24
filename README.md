@@ -9,6 +9,9 @@ Rental
    A production grade real estate rental apartment marketplace.
    Lets make Rental an another community.
    Rental beta version is published.
+
+   [View Demo](https://rental-3psq.onrender.com/)
+
    
 
 ```
@@ -17,13 +20,6 @@ Rental
 
          -------- # Note:  MVP hosted on Render free tier, which may take up to 50 seconds 
                                   to load initially due to server cold start. --------
-
-
-<p align="center">
-  <a href="https://rental-3psq.onrender.com/" target="_blank" rel="noopener noreferrer">🔗 View Demo</a>
-</p>
-
-
 
 
 
