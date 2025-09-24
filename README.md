@@ -11,6 +11,7 @@ Rental
    Lets make Rental an another community.
    Rental beta version is published.
 
+   View demo(https://rental-3psq.onrender.com/)
 
 ```
 
