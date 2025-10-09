@@ -8,7 +8,7 @@ Rental
 
 
    SaaS production grade real estate rental apartment marketplace.
-   Rental beta version is published.
+   Rental v-1 version is published.
 
    <p><small><a href="https://rental-3psq.onrender.com/" target="_blank" rel="noopener noreferrer">View demo</a></small></p>
 
