@@ -144,57 +144,6 @@ NEXT_PUBLIC_MAPBOX_STYLE=mapbox://styles/yourusername/yourstyleid
 -------------------------------------------------------------------
 
 
-🚀  Production ..
-
-
-Next frontned ----------->
-
-
-# API URL 
-NEXT_PUBLIC_API_URL=http://<Hosted_API>
-
- .
- .
- .
-
-
-
-Build command: npm i && npm run build
-Start command: npm start
-NEXT_PUBLIC_API_URL:https:/<your_api_url>.com     --- the deployed frontend url
-
-
-
-
-Node backend ----------->
-
-
-# Server
-
-# Hosted PostgreSQL 
-DATABASE_URL="postgresql://DB_USER:DB_PASSWORD@<your-db-host>.example.com:5432/DB_NAME?schema=public&sslmode=require"
-
-# Allowed frontend origin 
-CORS_ORIGIN=https://your-frontend.onrender.com
-
- .
- .
- .
-
-# Node env & port
-NODE_ENV=production
-PORT=4000
-
-
-
-
-
-Start command: npm run dev (use render or vercel for easy backend hosting)
-Build command: npm i && npm run build
-
-        < note: use the hosted backend and frontend url for the environment variable
-             setup and for database you can use neon   >
-
 
 
 📝 Developed
