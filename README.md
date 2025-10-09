@@ -7,7 +7,7 @@ Rental
 ---
 
 
-   A production grade real estate rental apartment marketplace.
+   SaaS production grade real estate rental apartment marketplace.
    Rental beta version is published.
 
    <p><small><a href="https://rental-3psq.onrender.com/" target="_blank" rel="noopener noreferrer">View demo</a></small></p>
