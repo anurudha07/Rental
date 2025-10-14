@@ -17,7 +17,7 @@ Rental
 
 
 
-         -------- # Note:  MVP hosted on Render free tier, which may take up to 50 seconds 
+         -------- # Note:  MVP backed by Render free tier, which may take up to 50 seconds 
                                   to load initially due to server cold start. --------
 
 
