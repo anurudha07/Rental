@@ -10,7 +10,7 @@ Rental
    Production grade SaaS real estate rental apartment marketplace.
    Rental v-1 version is published.
 
-   <p><small><a href="https://rental-3psq.onrender.com/" target="_blank" rel="noopener noreferrer">View demo</a></small></p>
+   <p><small><a href="https://rental-iota-three.vercel.app" target="_blank" rel="noopener noreferrer">View demo</a></small></p>
 
 
 ```
