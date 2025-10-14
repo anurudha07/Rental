@@ -16,8 +16,6 @@ Rental
 ```
 
 
-
- [View Demo](https://rental-3psq.onrender.com/)
  
 
 ✨ Features -----
