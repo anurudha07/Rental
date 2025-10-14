@@ -15,7 +15,6 @@ Rental
 
 ```
 
-
  
 
 ✨ Features -----
@@ -153,7 +152,6 @@ NEXT_PUBLIC_MAPBOX_STYLE=mapbox://styles/yourusername/yourstyleid
 Thanks if you stayed till here
 
 Happy Hacking!!
-
 
 
 
