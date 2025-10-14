@@ -17,10 +17,6 @@ Rental
 
 
 
-         -------- # Note:  MVP backed by Render free tier, which may take up to 50 seconds 
-                                  to load initially due to server cold start. --------
-
-
  [View Demo](https://rental-3psq.onrender.com/)
  
 
@@ -159,7 +155,6 @@ NEXT_PUBLIC_MAPBOX_STYLE=mapbox://styles/yourusername/yourstyleid
 Thanks if you stayed till here
 
 Happy Hacking!!
-
 
 
 
